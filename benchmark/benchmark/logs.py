@@ -58,6 +58,11 @@ class LogParser:
         self.leader_commits = self._merge_results([x.items() for x in leader_commits])
         self.non_leader_commits = self._merge_results([x.items() for x in non_leader_commits])
 
+        _keys = list(self.non_leader_commits.keys())
+        for k in _keys:
+            if k not in self.proposals:
+                del self.non_leader_commits[k]
+
         self.sizes = {
             k: v for x in sizes for k, v in x.items() if k in self.commits
         }
@@ -131,6 +136,7 @@ class LogParser:
             samples = {}
             tmp = findall(r'Header ([^ ]+) contains (\d+) B', log)
             sizes = {d: int(s) for d, s in tmp}
+
         else:
             tmp = findall(r'Header ([^ ]+) contains sample tx (\d+)', log)
             samples = {int(s): d for d, s in tmp}
@@ -220,15 +226,15 @@ class LogParser:
         return txns/d
     
     def _consensus_latency(self):
-        latency = [c - self.proposals[d] for d, c in self.commits.items()]
+        latency = [c - self.proposals[d] for d, c in self.commits.items() if d in self.proposals]
         return mean(latency) if latency else 0
     
     def _consensus_leader_latency(self):
-        latency = [c - self.proposals[d] for d, c in self.leader_commits.items()]
+        latency = [c - self.proposals[d] for d, c in self.leader_commits.items() if d in self.proposals]
         return mean(latency) if latency else 0
     
     def _consensus_non_leader_latency(self):
-        latency = [c - self.proposals[d] for d, c in self.non_leader_commits.items()]
+        latency = [c - self.proposals[d] for d, c in self.non_leader_commits.items() if d in self.proposals]
         return mean(latency) if latency else 0
 
     def _end_to_end_throughput(self):

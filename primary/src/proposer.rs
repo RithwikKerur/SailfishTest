@@ -4,7 +4,7 @@ use crate::messages::{
     Certificate, Header, HeaderWithCertificate, NoVoteCert, NoVoteMsg, Timeout, TimeoutCert,
 };
 use crate::primary::Round;
-use config::Committee;
+use config::{Clan, Committee};
 use crypto::{PublicKey, SignatureService};
 #[cfg(feature = "benchmark")]
 use log::info;
@@ -24,6 +24,7 @@ pub struct Proposer {
     name: PublicKey,
     /// The committee information.
     committee: Committee,
+    clan: Clan,
     /// Service to sign headers.
     signature_service: SignatureService,
     /// The size of the headers' payload.
@@ -71,6 +72,7 @@ impl Proposer {
     pub fn spawn(
         name: PublicKey,
         committee: Committee,
+        clan: Clan,
         signature_service: SignatureService,
         header_size: usize,
         tx_size: usize,
@@ -90,6 +92,7 @@ impl Proposer {
             Self {
                 name,
                 committee,
+                clan,
                 signature_service,
                 header_size,
                 tx_size,
@@ -168,7 +171,11 @@ impl Proposer {
 
         let mut payload = Vec::new();
         if self.consensus_only {
-            payload = vec![vec![0u8; self.tx_size]; self.header_size / self.tx_size];
+            payload = if self.tx_size > 0 {
+                vec![vec![0u8; self.tx_size]; self.header_size / self.tx_size]
+            } else {
+                vec![]
+            };
         } else {
             payload = self.txns.drain(..limit).collect();
         }
@@ -190,27 +197,29 @@ impl Proposer {
 
         #[cfg(feature = "benchmark")]
         {
-            info!("Created {:?}", header.id);
-            info!(
-                "Header {:?} contains {} B",
-                header.id,
-                header.payload.len() * self.tx_size
-            );
+            if self.clan.is_member(&self.name) {
+                info!("Created {:?}", header.id);
+                info!(
+                    "Header {:?} contains {} B",
+                    header.id,
+                    header.payload.len() * self.tx_size
+                );
 
-            if !self.consensus_only {
-                let tx_ids: Vec<_> = header
-                    .payload
-                    .clone()
-                    .iter()
-                    .filter(|tx| tx[0] == 0u8 && tx.len() > 8)
-                    .filter_map(|tx| tx[1..9].try_into().ok())
-                    .collect();
-                for id in tx_ids {
-                    info!(
-                        "Header {:?} contains sample tx {}",
-                        header.id,
-                        u64::from_be_bytes(id)
-                    );
+                if !self.consensus_only {
+                    let tx_ids: Vec<_> = header
+                        .payload
+                        .clone()
+                        .iter()
+                        .filter(|tx| tx[0] == 0u8 && tx.len() > 8)
+                        .filter_map(|tx| tx[1..9].try_into().ok())
+                        .collect();
+                    for id in tx_ids {
+                        info!(
+                            "Header {:?} contains sample tx {}",
+                            header.id,
+                            u64::from_be_bytes(id)
+                        );
+                    }
                 }
             }
             // NOTE: This log entry is used to compute performance.

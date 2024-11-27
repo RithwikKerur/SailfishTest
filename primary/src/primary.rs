@@ -274,12 +274,19 @@ impl Primary {
 
         // When the `Core` collects enough parent certificates, the `Proposer` generates a new header with new batch
         // digests from our workers and it back to the `Core`.
+        let _tx_size = if clan.is_member(&name) {
+            parameters.tx_size
+        } else {
+            0
+        };
+
         Proposer::spawn(
             name,
             committee.clone(),
+            clan.clone(),
             signature_service,
             parameters.header_size,
-            parameters.tx_size,
+            _tx_size,
             parameters.max_header_delay,
             parameters.consensus_only,
             /* rx_core */ rx_parents,

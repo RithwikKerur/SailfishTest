@@ -9,7 +9,6 @@ use std::fs::{self, OpenOptions};
 use std::io::BufWriter;
 use std::io::Write as _;
 use std::net::SocketAddr;
-use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -362,6 +361,7 @@ pub struct ClanMember {
 #[derive(Clone, Deserialize)]
 pub struct Clan {
     pub members: BTreeMap<PublicKey, ClanMember>,
+    pub sorted_keys: Vec<PublicKey>,
 }
 
 impl Import for Clan {}
@@ -382,9 +382,12 @@ impl Clan {
                 clan_members.insert(public_key.clone(), clan_member);
             }
         }
+        let mut keys: Vec<_> = clan_members.keys().cloned().collect();
+        keys.sort();
 
         Ok(Clan {
             members: clan_members,
+            sorted_keys: keys,
         })
     }
 
@@ -497,6 +500,7 @@ impl Clan {
             .map(|(name, _)| (name.clone()))
             .collect()
     }
+
     pub fn get_bls_public_keys(&self) -> Vec<PublicKeyShareG2> {
         self.members.iter().map(|(_, x)| x.bls_pubkey_g2).collect()
     }
@@ -507,6 +511,20 @@ impl Clan {
 
     pub fn is_member(&self, name: &PublicKey) -> bool {
         self.members.get(name).is_some()
+    }
+
+    /// Returns a leader node in a round-robin fashion.
+    /// This does not have to be changed because it works for odd and even numbers.
+    pub fn leader(&self, seed: usize) -> PublicKey {
+        self.sorted_keys[seed % self.size()]
+    }
+
+    pub fn leader_list(&self, leaders_per_round: usize, seed: usize) -> Vec<PublicKey> {
+        let mut leaders: Vec<PublicKey> = Vec::new();
+        for i in 0..leaders_per_round {
+            leaders.push(self.sorted_keys[(seed + i) % self.size()]);
+        }
+        leaders
     }
 }
 

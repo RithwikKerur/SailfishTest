@@ -1,5 +1,5 @@
 // Copyright(C) Facebook, Inc. and its affiliates.
-use config::Committee;
+use config::{Clan, Committee};
 use crypto::Hash as _;
 use crypto::{Digest, PublicKey};
 use log::{debug, info, warn};
@@ -68,6 +68,7 @@ impl State {
 pub struct Consensus {
     /// The committee information.
     committee: Committee,
+    clan: Clan,
     /// The depth of the garbage collector.
     gc_depth: Round,
 
@@ -92,6 +93,7 @@ pub struct Consensus {
 impl Consensus {
     pub fn spawn(
         committee: Committee,
+        clan: Clan,
         gc_depth: Round,
         rx_primary: Receiver<Certificate>,
         rx_primary_header_msg: Receiver<ConsensusMessage>,
@@ -102,6 +104,7 @@ impl Consensus {
         tokio::spawn(async move {
             Self {
                 committee: committee.clone(),
+                clan: clan.clone(),
                 gc_depth,
                 rx_primary,
                 rx_primary_header_msg,
@@ -334,7 +337,7 @@ impl Consensus {
         let seed = round;
 
         // Elect the leader.
-        let leader = self.committee.leader(seed as usize);
+        let leader = self.clan.leader(seed as usize);
 
         // Return its certificate and the certificate's digest.
         dag.get(&round).map(|x| x.get(&leader)).flatten()
@@ -357,8 +360,7 @@ impl Consensus {
         let seed = round;
 
         // get the leaders list.
-        let leader_list: Vec<PublicKey> =
-            self.committee.leader_list(leaders_per_round, seed as usize);
+        let leader_list: Vec<PublicKey> = self.clan.leader_list(leaders_per_round, seed as usize);
 
         let mut output: Vec<Option<&'a (Digest, Certificate)>> = Vec::new();
         for leader in leader_list {

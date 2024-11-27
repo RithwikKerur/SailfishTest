@@ -163,6 +163,7 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
             );
             Consensus::spawn(
                 committee,
+                clan,
                 parameters.gc_depth,
                 /* rx_primary */ rx_new_certificates,
                 rx_consensus_header_msg,
