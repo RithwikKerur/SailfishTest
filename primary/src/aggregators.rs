@@ -100,6 +100,7 @@ impl CertificatesAggregator {
         &mut self,
         certificate: &Certificate,
         committee: &Committee,
+        clan: &Clan,
         leaders_per_round: usize,
     ) -> DagResult<Option<Vec<Certificate>>> {
         let origin = certificate.origin();
@@ -114,7 +115,7 @@ impl CertificatesAggregator {
         self.certificates.push(certificate.clone());
         self.weight += committee.stake(&origin);
 
-        let leaders = committee.leader_list(leaders_per_round, round as usize);
+        let leaders = clan.leader_list(leaders_per_round, round as usize);
         for leader in leaders.iter() {
             if !self.used.contains(leader) {
                 return Ok(None);

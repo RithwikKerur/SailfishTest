@@ -1,6 +1,6 @@
 use crate::aggregators::CertificatesAggregator;
 use crate::primary::Round;
-use config::Committee;
+use config::{Clan, Committee};
 use crypto::PublicKey;
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -22,6 +22,7 @@ pub struct CertificateHandler {
     processed_certs: HashMap<Round, HashSet<PublicKey>>,
     leaders_per_round: usize,
     committee: Committee,
+    clan: Clan,
     consensus_round: Arc<AtomicU64>,
     /// The last garbage collected round.
     gc_round: Round,
@@ -37,6 +38,7 @@ impl CertificateHandler {
         leaders_per_round: usize,
         gc_depth: Round,
         committee: Committee,
+        clan: Clan,
         consensus_round: Arc<AtomicU64>,
     ) {
         tokio::spawn(async move {
@@ -49,6 +51,7 @@ impl CertificateHandler {
                 processed_certs: HashMap::with_capacity(2 * gc_depth as usize),
                 leaders_per_round,
                 committee,
+                clan,
                 consensus_round,
                 gc_round: 0,
                 gc_depth,
@@ -71,7 +74,12 @@ impl CertificateHandler {
             .certificates_aggregators
             .entry(certificate.round())
             .or_insert_with(|| Box::new(CertificatesAggregator::new()))
-            .append(&certificate, &self.committee, self.leaders_per_round)?
+            .append(
+                &certificate,
+                &self.committee,
+                &self.clan,
+                self.leaders_per_round,
+            )?
         {
             // Send it to the `Proposer`.
             self.tx_proposer

@@ -170,7 +170,16 @@ impl Consensus {
                             for i in 0..self.leaders_per_round {
 
                                 let leader_and_digest_list : Vec<_> = self.leader_list(self.leaders_per_round, leader_round, &state.dag);
-                                let (leader_digest, leader) = match leader_and_digest_list[i] {
+
+                                // Temporary hack to commit all leaders.
+                                let (leader_digest, _) = match leader_and_digest_list[0] {
+                                    Some(x) => x,
+                                    None => {
+                                        break;
+                                    },
+                                };
+
+                                let (_leader_digest, leader) = match leader_and_digest_list[i] {
                                     Some(x) => x,
                                     None => {
                                         info!("Leader not delivered yet! idx: {} round: {}", i, leader_round);
@@ -221,6 +230,11 @@ impl Consensus {
                                     }
                                 }else{
                                     // Skip committing rest of the leaders as the current leader is not committed.
+
+                                    if i > 0 {
+                                        info!("Skip commit leaders at {:?} {:?} {:?} {:?}", i, leader_digest, leader_round, current_stake_value);
+                                    }
+
                                     break;
                                 }
                             }

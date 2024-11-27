@@ -237,7 +237,7 @@ impl Proposer {
     /// Update the last leader.
     fn update_leaders(&mut self) -> bool {
         let leaders_name = self
-            .committee
+            .clan
             .leader_list(self.leaders_per_round, self.round as usize);
         for i in 0..self.leaders_per_round {
             self.last_leaders[i] = self

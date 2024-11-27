@@ -240,6 +240,7 @@ impl Primary {
             leaders_per_round,
             parameters.gc_depth,
             committee.clone(),
+            clan.clone(),
             consensus_round.clone(),
         );
 

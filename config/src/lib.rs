@@ -218,9 +218,9 @@ impl Committee {
 
     /// Returns a leader node in a round-robin fashion.
     /// This does not have to be changed because it works for odd and even numbers.
-    pub fn leader(&self, seed: usize) -> PublicKey {
-        self.sorted_keys[seed % self.size()]
-    }
+    // pub fn leader(&self, seed: usize) -> PublicKey {
+    //     self.sorted_keys[seed % self.size()]
+    // }
 
     pub fn sub_leaders(&self, seed: usize, num_leaders: usize) -> Vec<PublicKey> {
         // Find the index of the seed in the sorted keys vector
@@ -236,13 +236,13 @@ impl Committee {
         sub_leaders
     }
 
-    pub fn leader_list(&self, leaders_per_round: usize, seed: usize) -> Vec<PublicKey> {
-        let mut leaders: Vec<PublicKey> = Vec::new();
-        for i in 0..leaders_per_round {
-            leaders.push(self.sorted_keys[(seed + i) % self.size()]);
-        }
-        leaders
-    }
+    // pub fn leader_list(&self, leaders_per_round: usize, seed: usize) -> Vec<PublicKey> {
+    //     let mut leaders: Vec<PublicKey> = Vec::new();
+    //     for i in 0..leaders_per_round {
+    //         leaders.push(self.sorted_keys[(seed + i) % self.size()]);
+    //     }
+    //     leaders
+    // }
 
     /// Returns the primary addresses of the target primary.
     pub fn primary(&self, to: &PublicKey) -> Result<PrimaryAddresses, ConfigError> {

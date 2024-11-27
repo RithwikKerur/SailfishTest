@@ -299,7 +299,12 @@ impl Core {
                     .certificates_aggregators
                     .entry(certificate.round())
                     .or_insert_with(|| Box::new(CertificatesAggregator::new()))
-                    .append(&certificate, &self.committee, self.leaders_per_round)?
+                    .append(
+                        &certificate,
+                        &self.committee,
+                        &self.clan,
+                        self.leaders_per_round,
+                    )?
                 {
                     // Send it to the `Proposer`.
                     self.tx_proposer
@@ -607,7 +612,12 @@ impl Core {
             .certificates_aggregators
             .entry(certificate.round())
             .or_insert_with(|| Box::new(CertificatesAggregator::new()))
-            .append(&certificate, &self.committee, self.leaders_per_round)?
+            .append(
+                &certificate,
+                &self.committee,
+                &self.clan,
+                self.leaders_per_round,
+            )?
         {
             // Send it to the `Proposer`.
             self.tx_proposer
