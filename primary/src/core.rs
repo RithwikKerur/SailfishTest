@@ -196,7 +196,7 @@ impl Core {
             .expect("Failed to serialize own no vote message");
 
         // Send No Vote Msg to the leader of the round
-        let leader_pub_key = self.committee.leader((no_vote_msg.round + 1) as usize);
+        let leader_pub_key = self.clan.leader((no_vote_msg.round + 1) as usize);
 
         let address = self
             .committee

@@ -154,7 +154,7 @@ impl Proposer {
             TimeoutCert::new(0) // Assuming TimeoutCert::new creates an empty certificate
         };
 
-        let no_vote_certs = if self.committee.leader((self.round) as usize) == self.name
+        let no_vote_certs = if self.clan.leader((self.round) as usize) == self.name
             && self.last_no_vote_cert.len() > 0
             && self.last_no_vote_cert[0].round == self.round - 1
         {
@@ -290,7 +290,7 @@ impl Proposer {
             // the leader or the leader has enough votes to enable a commit).
             let enough_parents = !self.last_parents.is_empty();
             let timeout_cert_gathered = self.last_timeout_cert.round == self.round;
-            let is_next_leader = self.committee.leader((self.round + 1) as usize) == self.name;
+            let is_next_leader = self.clan.leader((self.round + 1) as usize) == self.name;
             let no_vote_cert_gathered =
                 self.last_no_vote_cert.len() > 0 && self.last_no_vote_cert[0].round == self.round;
             let enough_digests = self.payload_size >= self.header_size;
@@ -315,7 +315,7 @@ impl Proposer {
                 }
 
                 if timer_expired && !check_last_leaders(&self.last_leaders) && !is_next_leader {
-                    self.make_no_vote_msg(self.committee.leader((self.round) as usize).clone())
+                    self.make_no_vote_msg(self.clan.leader((self.round) as usize).clone())
                         .await;
                 }
 

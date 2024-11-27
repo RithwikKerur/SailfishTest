@@ -69,7 +69,7 @@ impl VoteProcessor {
                 if let Some(certificate) =
                     vote_aggregator.append(&vote, &self.committee, &self.clan)?
                 {
-                    info!(
+                    debug!(
                         "Assembled cert {:?} round {}",
                         certificate.header_id, certificate.round
                     );
