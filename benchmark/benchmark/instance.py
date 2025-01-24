@@ -9,6 +9,7 @@ from google.cloud import compute_v1
 from google.auth import compute_engine
 from google.oauth2 import service_account
 
+'''
 #path to your GCP service account key json file
 GCP_KEY_PATH = '../benchmark/benchmark/key.json'
 SSH_PUB_KEY_PATH = '{path_to_ssh_public_key}'
@@ -18,7 +19,7 @@ compute_service = build('compute', 'v1')
 
 # Set up authentication using a service account
 credentials = service_account.Credentials.from_service_account_file(GCP_KEY_PATH)
-
+'''
 class GCPError(Exception):
     def __init__(self, error):
         self.message = str(error)
@@ -32,12 +33,12 @@ class InstanceManager:
 
     
     def __init__(self,settings):
-        self.compute_client = compute_v1.InstancesClient(credentials=credentials)
+        #self.compute_client = compute_v1.InstancesClient(credentials=credentials)
         assert isinstance(settings, Settings)
         self.clients = {}
         self.settings = settings
-        for zone in self.settings.zones:
-            self.clients[zone] = compute_v1.InstancesClient(credentials=credentials)
+        #for zone in self.settings.zones:
+        #    self.clients[zone] = compute_v1.InstancesClient(credentials=credentials)
 
 
 

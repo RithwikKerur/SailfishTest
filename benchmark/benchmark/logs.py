@@ -46,11 +46,12 @@ class LogParser:
         except (ValueError, IndexError, AttributeError) as e:
             raise ParseError(f'Failed to parse nodes\' logs: {e}')
         proposals, commits, self.configs, primary_ips, leader_commits, non_leader_commits = zip(*results)
+        
         self.proposals = self._merge_results([x.items() for x in proposals])
         self.commits = self._merge_results([x.items() for x in commits])
         self.leader_commits = self._merge_results([x.items() for x in leader_commits])
         self.non_leader_commits = self._merge_results([x.items() for x in non_leader_commits])
-
+        print(f"proposals: {self.proposals} commits = {self.commits}")
         # Parse the workers logs.
         try:
             with Pool() as p:
@@ -169,6 +170,8 @@ class LogParser:
         start, end = min(self.proposals.values()), max(self.commits.values())
         duration = end - start
         bytes = sum(self.sizes.values())
+        print(f"Bytes = {bytes}")
+        print(f"Duration = {duration}")
         bps = bytes / duration
         tps = bps / self.size[0]
         return tps, bps, duration

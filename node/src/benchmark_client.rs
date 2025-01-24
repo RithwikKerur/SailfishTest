@@ -64,7 +64,7 @@ async fn main() -> Result<()> {
     info!("Transactions size: {} B", size);
 
     // NOTE: This log entry is used to compute performance.
-    info!("Transactions rate: {} tx/s", rate*(1000/burst_duration));
+    info!("Transactions rate: {} tx/s", rate);
 
     let client = Client {
         target,
@@ -107,7 +107,7 @@ impl Client {
             .context(format!("failed to connect to {}", self.target))?;
 
         // Submit all transactions.
-        let burst = self.rate;
+        let burst = self.rate/20;
         let mut tx = BytesMut::with_capacity(self.size);
         let mut counter = 0;
         let mut r = rand::thread_rng().gen();
@@ -117,7 +117,7 @@ impl Client {
 
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");
-
+        info!("Burst: {}", burst);
         'main: loop {
             interval.as_mut().tick().await;
             let now = Instant::now();

@@ -160,6 +160,7 @@ impl Proposer {
         )
         .await;
 
+        debug!("Make Header Called");
         debug!("Created {:?}", header);
 
         #[cfg(feature = "benchmark")]
@@ -219,7 +220,9 @@ impl Proposer {
                 self.make_timeout_msg().await;
                 timeout_sent = true;
             }
-
+            if(timer_expired && timeout_cert_gathered ){
+                debug!("timer_expired {} timeout_cert_gathered {} is_next_leader {} no_vote_cert_gathered{} enough_parents {}", timer_expired, timeout_cert_gathered, is_next_leader, no_vote_cert_gathered, enough_parents);
+            }
             if ((timer_expired && timeout_cert_gathered && (!is_next_leader || no_vote_cert_gathered)) || (enough_digests && advance)) && enough_parents {
                 
                 if timer_expired && self.last_leader.is_none() && !is_next_leader {
@@ -229,6 +232,7 @@ impl Proposer {
                 // Advance to the next round.
                 self.round += 1;
                 debug!("Dag moved to round {}", self.round);
+                debug!("Leader: {}", self.committee.leader(self.round as usize));
 
                 // Make a new header.
                 self.make_header().await;
@@ -256,7 +260,8 @@ impl Proposer {
                         Ordering::Equal => {
                             // The core gives us the parents the first time they are enough to form a quorum.
                             // Then it keeps giving us all the extra parents.
-                            self.last_parents.extend(parents)
+                            self.last_parents.extend(parents);
+                            debug!("Received Parents {:?}", self.last_parents);
                         }
                     }
 
@@ -272,19 +277,23 @@ impl Proposer {
                 }
                 Some((timeout_cert, round)) = self.rx_timeout_cert.recv() => {
                     match round.cmp(&self.last_timeout_cert.round) {
+                        
                         Ordering::Greater => {
                             // We accept round bigger than our current round to jump ahead in case we were
                             // late (or just joined the network).
                             self.last_timeout_cert = timeout_cert.clone();
-
+                            self.round = round;
+                            debug!("Received Greater Timeout Certificate");
                             // TODO: How do we react?
                         },
                         Ordering::Less => {
                             // Ignore parents from older rounds.
+                            debug!("Received Lower Timeout Certificate");
                         },
                         Ordering::Equal => {
                             // TODO: Here we have to create header and include the timeout certificate in the header?
                             self.last_timeout_cert = timeout_cert.clone();
+                            debug!("Received Equal Timeout Certificate");
                         }
                     }
                 }
@@ -293,6 +302,7 @@ impl Proposer {
                         Ordering::Greater => {
                             // We accept round bigger than our current round to jump ahead in case we were
                             // late (or just joined the network).
+                            debug!("Received Greater NVC");
                             self.last_no_vote_cert = no_vote_cert;
 
                             // TODO: How do we react?
@@ -302,6 +312,7 @@ impl Proposer {
                         },
                         Ordering::Equal => {
                             // TODO: Here we have to create header and include the timeout certificate in the header?
+                            debug!("Received Equal NVC");
                             self.last_no_vote_cert = no_vote_cert;
                         }
                     }
