@@ -51,7 +51,6 @@ class LogParser:
         self.commits = self._merge_results([x.items() for x in commits])
         self.leader_commits = self._merge_results([x.items() for x in leader_commits])
         self.non_leader_commits = self._merge_results([x.items() for x in non_leader_commits])
-        print(f"proposals: {self.proposals} commits = {self.commits}")
         # Parse the workers logs.
         try:
             with Pool() as p:
