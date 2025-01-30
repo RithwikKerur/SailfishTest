@@ -169,6 +169,8 @@ class LogParser:
         start, end = min(self.proposals.values()), max(self.commits.values())
         duration = end - start
         bytes = sum(self.sizes.values())
+        print(f"BYTES {bytes}")
+        print(f"Duration {duration}")
         bps = bytes / duration
         tps = bps / self.size[0]
         return tps, bps, duration
