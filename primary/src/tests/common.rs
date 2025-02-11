@@ -106,7 +106,6 @@ pub fn header() -> Header {
     };
     Header {
         id: header.digest(),
-        signature: Signature::new(&header.digest(), &secret),
         ..header
     }
 }
@@ -127,7 +126,6 @@ pub fn headers() -> Vec<Header> {
             };
             Header {
                 id: header.digest(),
-                signature: Signature::new(&header.digest(), &secret),
                 ..header
             }
         })
@@ -144,10 +142,8 @@ pub fn votes(header: &Header) -> Vec<Vote> {
                 round: header.round,
                 origin: header.author,
                 author,
-                signature: Signature::default(),
             };
             Vote {
-                signature: Signature::new(&vote.digest(), &secret),
                 ..vote
             }
         })
@@ -160,7 +156,7 @@ pub fn certificate(header: &Header) -> Certificate {
         header: header.clone(),
         votes: votes(&header)
             .into_iter()
-            .map(|x| (x.author, x.signature))
+            .map(|x| x.author)
             .collect(),
     }
 }

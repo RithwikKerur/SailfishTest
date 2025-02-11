@@ -12,7 +12,7 @@ use crate::synchronizer::Synchronizer;
 use async_trait::async_trait;
 use bytes::Bytes;
 use config::{Committee, KeyPair, Parameters, WorkerId};
-use crypto::{Digest, PublicKey, SignatureService};
+use crypto::{Digest, PublicKey};
 use futures::sink::SinkExt as _;
 use log::info;
 use network::{MessageHandler, Receiver as NetworkReceiver, Writer};
@@ -144,8 +144,6 @@ impl Primary {
             /* tx_certificate_waiter */ tx_sync_certificates,
         );
 
-        // The `SignatureService` is used to require signatures on specific digests.
-        let signature_service = SignatureService::new(secret);
 
         // The `Core` receives and handles headers, votes, and certificates from the other primaries.
         Core::spawn(
@@ -153,7 +151,6 @@ impl Primary {
             committee.clone(),
             store.clone(),
             synchronizer,
-            signature_service.clone(),
             consensus_round.clone(),
             parameters.gc_depth,
             /* rx_primaries */ rx_primary_messages,
@@ -203,7 +200,6 @@ impl Primary {
         Proposer::spawn(
             name,
             committee.clone(),
-            signature_service,
             parameters.header_size,
             parameters.max_header_delay,
             /* rx_core */ rx_parents,

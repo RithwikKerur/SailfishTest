@@ -21,8 +21,6 @@ pub struct Proposer {
     name: PublicKey,
     /// The committee information.
     committee: Committee,
-    /// Service to sign headers.
-    signature_service: SignatureService,
     /// The size of the headers' payload.
     header_size: usize,
     /// The maximum delay to wait for batches' digests.
@@ -64,7 +62,6 @@ impl Proposer {
     pub fn spawn(
         name: PublicKey,
         committee: Committee,
-        signature_service: SignatureService,
         header_size: usize,
         max_header_delay: u64,
         rx_core: Receiver<(Vec<Certificate>, Round)>,
@@ -80,7 +77,6 @@ impl Proposer {
             Self {
                 name,
                 committee,
-                signature_service,
                 header_size,
                 max_header_delay,
                 rx_core,
