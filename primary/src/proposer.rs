@@ -107,7 +107,6 @@ impl Proposer {
         let timeout_cert_msg = Timeout::new(
             self.round,
             self.name,
-            &mut self.signature_service,
         ).await;
 
         debug!("Created {:?}", timeout_cert_msg);
@@ -123,7 +122,6 @@ impl Proposer {
         let no_vote_msg = NoVoteMsg::new(
             self.round,
             self.name,
-            &mut self.signature_service,
         ).await;
 
         debug!("Created {:?}", no_vote_msg);
@@ -155,8 +153,7 @@ impl Proposer {
             self.digests.drain(..).collect(),
             self.last_parents.drain(..).map(|x| x.digest()).collect(),
             timeout_cert,
-            no_vote_cert,
-            &mut self.signature_service,
+            no_vote_cert
         )
         .await;
 

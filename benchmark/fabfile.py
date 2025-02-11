@@ -13,10 +13,10 @@ from benchmark.remote import Bench, BenchError
 def local(ctx, debug=True):
     ''' Run benchmarks on localhost '''
     bench_params = {
-        'faults': 0,
+        'faults': 1,
         'nodes': 4,
         'workers': 1,
-        'rate': 100_000,
+        'rate': 50_000,
         'tx_size': 512,
         'duration': 20,
         "burst" : 50

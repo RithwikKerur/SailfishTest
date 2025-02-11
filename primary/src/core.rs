@@ -283,7 +283,7 @@ impl Core {
             .insert(header.author)
         {
             // Make a vote and send it to the header's creator.
-            let vote = Vote::new(header, &self.name, &mut self.signature_service).await;
+            let vote = Vote::new(header, &self.name).await;
             debug!("Created {:?}", vote);
             if vote.origin == self.name {
                 self.process_vote(vote)
@@ -336,8 +336,7 @@ impl Core {
         if !self.no_vote_aggregators.contains_key(&no_vote_msg.round) {
             let initial_no_vote_msg = NoVoteMsg::new(
                 no_vote_msg.round,
-                self.name.clone(),
-                &mut self.signature_service
+                self.name.clone()
             ).await;
 
             let mut aggregator = NoVoteAggregator::new();

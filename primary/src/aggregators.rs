@@ -2,13 +2,13 @@
 use crate::error::{DagError, DagResult};
 use crate::messages::{Certificate, Header, Timeout, TimeoutCert, Vote, NoVoteMsg, NoVoteCert};
 use config::{Committee, Stake};
-use crypto::{PublicKey, Signature};
+use crypto::{PublicKey};
 use std::collections::HashSet;
 
 /// Aggregates votes for a particular header into a certificate.
 pub struct VotesAggregator {
     weight: Stake,
-    votes: Vec<(PublicKey, Signature)>,
+    votes: Vec<PublicKey>,
     used: HashSet<PublicKey>,
 }
 
@@ -32,7 +32,7 @@ impl VotesAggregator {
         // Ensure it is the first time this authority votes.
         ensure!(self.used.insert(author), DagError::AuthorityReuse(author));
 
-        self.votes.push((author, vote.signature));
+        self.votes.push(author);
         self.weight += committee.stake(&author);
         if self.weight >= committee.quorum_threshold() {
             self.weight = 0; // Ensures quorum is only reached once.
@@ -86,7 +86,7 @@ impl CertificatesAggregator {
 /// Aggregates timeouts for a particular round into an action or trigger.
 pub struct TimeoutAggregator {
     weight: Stake,
-    timeouts: Vec<(PublicKey, Signature)>,
+    timeouts: Vec<PublicKey>,
     used: HashSet<PublicKey>,
 }
 
@@ -109,7 +109,7 @@ impl TimeoutAggregator {
         // Ensure it is the first time this authority sends a timeout.
         ensure!(self.used.insert(author), DagError::AuthorityReuse(author));
 
-        self.timeouts.push((author, timeout.signature));
+        self.timeouts.push(author);
         self.weight += committee.stake(&author);
         if self.weight >= committee.quorum_threshold() {
             // Once quorum is reached, you might want to reset for the next round or trigger an action.
@@ -125,7 +125,7 @@ impl TimeoutAggregator {
 /// Aggregates no-vote messages for a particular round into a certification.
 pub struct NoVoteAggregator {
     weight: Stake,
-    no_votes: Vec<(PublicKey, Signature)>,
+    no_votes: Vec<PublicKey>,
     used: HashSet<PublicKey>,
 }
 
@@ -148,7 +148,7 @@ impl NoVoteAggregator {
         // Ensure it is the first time this authority sends a no-vote message.
         ensure!(self.used.insert(author), DagError::AuthorityReuse(author));
 
-        self.no_votes.push((author, no_vote_msg.signature));
+        self.no_votes.push(author);
         self.weight += committee.stake(&author);
         if self.weight >= committee.quorum_threshold() {
             // Once quorum is reached, you might reset for the next round or use the certification as needed.
