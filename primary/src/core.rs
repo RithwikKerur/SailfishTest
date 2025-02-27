@@ -254,9 +254,9 @@ impl Core {
         );
 
         if !has_leader {
-            header.timeout_cert.verify(&self.committee)?;
+            //header.timeout_cert.verify(&self.committee)?;
             if self.committee.leader(header.round as usize).eq(&header.author) {
-                header.no_vote_cert.verify(&self.committee)?;
+                //header.no_vote_cert.verify(&self.committee)?;
             }
         }
 

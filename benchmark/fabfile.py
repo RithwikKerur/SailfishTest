@@ -13,10 +13,10 @@ from benchmark.remote import Bench, BenchError
 def local(ctx, debug=True):
     ''' Run benchmarks on localhost '''
     bench_params = {
-        'faults': 5,
-        'nodes': 11,
+        'faults': 1,
+        'nodes': 4,
         'workers': 1,
-        'rate': 100_000,
+        'rate': 50000,
         'tx_size': 512,
         'duration': 20,
         "burst" : 50
@@ -27,7 +27,7 @@ def local(ctx, debug=True):
         'gc_depth': 50,  # rounds
         'sync_retry_delay': 10_000,  # ms
         'sync_retry_nodes': 3,  # number of nodes
-        'batch_size': 50_000,  # bytes
+        'batch_size': 25_000,  # bytes
         'max_batch_delay': 200  # ms
     }
     try:

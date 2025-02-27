@@ -45,26 +45,6 @@ impl Header {
             ..header
         }
     }
-
-    pub fn verify(&self, committee: &Committee) -> DagResult<()> {
-        // Ensure the header id is well formed.
-        ensure!(self.digest() == self.id, DagError::InvalidHeaderId);
-
-        // Ensure the authority has voting rights.
-        let voting_rights = committee.stake(&self.author);
-        ensure!(voting_rights > 0, DagError::UnknownAuthority(self.author));
-
-        // Ensure all worker ids are correct.
-        for worker_id in self.payload.values() {
-            committee
-                .worker(&self.author, worker_id)
-                .map_err(|_| DagError::MalformedHeader(self.id.clone()))?;
-        }
-        Ok(())
-
-        // Check if pointer to prev leader exists
-        
-    }
 }
 
 impl Hash for Header {
@@ -122,15 +102,6 @@ impl Timeout {
         }
     }
 
-    pub fn verify(&self, committee: &Committee) -> DagResult<()> {
-        // Ensure the authority has voting rights.
-        ensure!(
-            committee.stake(&self.author) > 0,
-            DagError::UnknownAuthority(self.author)
-        );
-
-        Ok(())
-    }
 }
 
 impl Hash for Timeout {
@@ -179,14 +150,6 @@ impl NoVoteMsg {
         }
     }
 
-    pub fn verify(&self, committee: &Committee) -> DagResult<()> {
-        // Ensure the authority has voting rights.
-        ensure!(
-            committee.stake(&self.author) > 0,
-            DagError::UnknownAuthority(self.author)
-        );
-        Ok(())
-    }
 }
 
 impl Hash for NoVoteMsg {
@@ -229,15 +192,6 @@ impl Vote {
             author: *author,
         };
         Self { ..vote }
-    }
-
-    pub fn verify(&self, committee: &Committee) -> DagResult<()> {
-        // Ensure the authority has voting rights.
-        ensure!(
-            committee.stake(&self.author) > 0,
-            DagError::UnknownAuthority(self.author)
-        );
-        Ok(())
     }
 }
 
@@ -293,26 +247,6 @@ impl TimeoutCert {
     }
 
     // Verifies the timeout certificate against the committee.
-    pub fn verify(&self, committee: &Committee) -> DagResult<()> {
-        let mut weight = 0;
-
-        let mut used = HashSet::new();
-        for name in self.timeouts.iter() {
-            ensure!(!used.contains(name), DagError::AuthorityReuse(*name));
-            let voting_rights = committee.stake(name);
-            ensure!(voting_rights > 0, DagError::UnknownAuthority(*name));
-            used.insert(*name);
-            weight += voting_rights;
-        }
-
-        // Check if the accumulated weight meets the quorum threshold.
-        ensure!(
-            weight >= committee.quorum_threshold(),
-            DagError::CertificateRequiresQuorum
-        );
-
-        Ok(())
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Default)]
@@ -338,25 +272,6 @@ impl NoVoteCert {
 
         Ok(())
     }
-
-    pub fn verify(&self, committee: &Committee) -> DagResult<()> {
-        let mut weight = 0;
-        let mut used = HashSet::new();
-        for author in &self.no_votes {
-            ensure!(!used.contains(author), DagError::AuthorityReuse(*author));
-            let voting_rights = committee.stake(author);
-            ensure!(voting_rights > 0, DagError::UnknownAuthority(*author));
-            used.insert(*author);
-            weight += voting_rights;
-        }
-
-        ensure!(
-            weight >= committee.quorum_threshold(),
-            DagError::CertificateRequiresQuorum
-        );
-
-        Ok(())
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Default)]
@@ -378,33 +293,6 @@ impl Certificate {
                 ..Self::default()
             })
             .collect()
-    }
-
-    pub fn verify(&self, committee: &Committee) -> DagResult<()> {
-        // Genesis certificates are always valid.
-        if Self::genesis(committee).contains(self) {
-            return Ok(());
-        }
-
-        // Check the embedded header.
-        self.header.verify(committee)?;
-
-        // Ensure the certificate has a quorum.
-        let mut weight = 0;
-        let mut used = HashSet::new();
-        for name in self.votes.iter() {
-            ensure!(!used.contains(name), DagError::AuthorityReuse(*name));
-            let voting_rights = committee.stake(name);
-            ensure!(voting_rights > 0, DagError::UnknownAuthority(*name));
-            used.insert(*name);
-            weight += voting_rights;
-        }
-        ensure!(
-            weight >= committee.quorum_threshold(),
-            DagError::CertificateRequiresQuorum
-        );
-
-        Ok(())
     }
 
     pub fn round(&self) -> Round {
